@@ -4,10 +4,7 @@ import ag.selm.manager.entity.Product;
 import org.springframework.stereotype.Repository;
 
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.stream.IntStream;
 
 @Repository
@@ -42,6 +39,11 @@ public class InMemoryProductRepository implements ProductRepository {
         // Добавляем товар в список товаров
         this.products.add(product);
         return product;
+    }
+
+    public Optional<Product> findById(Integer productId) {
+        return this.products.stream()
+                .filter(product -> Objects.equals(productId, product.getId())).findFirst();
     }
 
 }
