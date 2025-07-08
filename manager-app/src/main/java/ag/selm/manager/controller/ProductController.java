@@ -7,11 +7,13 @@ import ag.selm.manager.service.ProductService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Locale;
 import java.util.NoSuchElementException;
 
 
@@ -26,11 +28,14 @@ public class ProductController {
     * */
     private final ProductService productService;
 
+    private final MessageSource messageSource;
+
     // ModelAttribute используется для привязки данных из HTTP запроса к объектам модели
     @ModelAttribute("product")
     public Product product(@PathVariable("productId") int productId) {
         // Метод будет возвращать Optional, что бы бороться с Null и NullPointerException
-        return this.productService.findProduct(productId).orElseThrow(() -> new NoSuchElementException("Товар не найден"));
+        return this.productService.findProduct(productId)
+                .orElseThrow(() -> new NoSuchElementException("catalogue.errors.product.not_found"));
     }
 
     // Страница товара
@@ -61,9 +66,15 @@ public class ProductController {
     @ExceptionHandler(NoSuchElementException.class)
     public String handleNoSuchElementException(NoSuchElementException exception,
                                                Model model,
-                                               HttpServletResponse response) {
+                                               HttpServletResponse response,
+                                               Locale locale) {
         response.setStatus(HttpStatus.NOT_FOUND.value());
-        model.addAttribute("error", exception.getMessage());
+        model.addAttribute("error",
+                this.messageSource.getMessage(
+                        exception.getMessage(),
+                        new Object[0],
+                        exception.getMessage(),
+                        locale));
         return "errors/404";
     }
 
