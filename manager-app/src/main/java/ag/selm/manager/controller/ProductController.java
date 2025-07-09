@@ -5,12 +5,15 @@ import ag.selm.manager.controller.payload.UpdateProductPayload;
 import ag.selm.manager.entity.Product;
 import ag.selm.manager.service.ProductService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Locale;
@@ -52,9 +55,21 @@ public class ProductController {
     }
 
     @PostMapping("edit")
-    public String updateProduct(@ModelAttribute("product") Product product, UpdateProductPayload  payload) {
-         this.productService.updateProduct(product.getId(), payload.title(), payload.details());
-         return "redirect:/catalogue/products/%d".formatted(product.getId());
+    public String updateProduct(@ModelAttribute(value = "product", binding = false ) Product product,
+                                @Valid UpdateProductPayload  payload,
+                                BindingResult bindingResult,
+                                Model model  ) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("payload", payload);
+            model.addAttribute("errors", bindingResult.getAllErrors()
+                    .stream()
+                    .map(ObjectError::getDefaultMessage)
+                    .toList());
+            return "catalogue/products/edit";
+        } else {
+            this.productService.updateProduct(product.getId(), payload.title(), payload.details());
+            return "redirect:/catalogue/products/%d".formatted(product.getId());
+        }
     }
 
     @PostMapping("delete")
